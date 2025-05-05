@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -20,23 +19,25 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { DataTable } from '@/components/DataTable';
-import { Plus, Pencil, Trash, Star } from 'lucide-react';
-import { tierSystemService } from '@/services/api';
-import { TierSystem } from '@/types/models';
+import { DataTable, Column } from '@/components/DataTable';
+import { Plus, Pencil, Trash, Users } from 'lucide-react';
+import { tierSystemService, customerTierService } from '@/services/api';
+import { TierSystem, CustomerTier } from '@/types/models';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
+// Define form schema
 const formSchema = z.object({
   name: z.string().min(1, "Tier name is required"),
-  benefits: z.string().min(1, "Benefits are required"),
+  benefits: z.string().min(1, "Benefits description is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 const TierSystemPage = () => {
   const [tiers, setTiers] = useState<TierSystem[]>([]);
+  const [customerTiers, setCustomerTiers] = useState<CustomerTier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTier, setCurrentTier] = useState<TierSystem | null>(null);
@@ -51,11 +52,16 @@ const TierSystemPage = () => {
   });
 
   useEffect(() => {
-    const fetchTiers = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
-        const tiersData = await tierSystemService.getAll();
+        const [tiersData, customerTiersData] = await Promise.all([
+          tierSystemService.getAll(),
+          customerTierService.getAll(),
+        ]);
+        
         setTiers(tiersData);
+        setCustomerTiers(customerTiersData);
       } catch (error) {
         console.error('Error fetching tiers:', error);
         toast({
@@ -68,7 +74,7 @@ const TierSystemPage = () => {
       }
     };
     
-    fetchTiers();
+    fetchData();
   }, [toast]);
 
   useEffect(() => {
@@ -96,13 +102,13 @@ const TierSystemPage = () => {
         await tierSystemService.update(currentTier.tier_id, tierData);
         toast({
           title: 'Tier updated',
-          description: `${data.name} tier has been updated successfully`,
+          description: `${data.name} has been updated successfully`,
         });
       } else {
         await tierSystemService.create(tierData);
         toast({
           title: 'Tier created',
-          description: `${data.name} tier has been added successfully`,
+          description: `${data.name} has been added successfully`,
         });
       }
 
@@ -120,7 +126,7 @@ const TierSystemPage = () => {
   };
 
   const handleDelete = async (tier: TierSystem) => {
-    if (window.confirm(`Are you sure you want to delete ${tier.name} tier?`)) {
+    if (window.confirm(`Are you sure you want to delete ${tier.name}?`)) {
       try {
         await tierSystemService.delete(tier.tier_id);
         
@@ -129,7 +135,7 @@ const TierSystemPage = () => {
         
         toast({
           title: 'Tier deleted',
-          description: `${tier.name} tier has been removed`,
+          description: `${tier.name} has been removed`,
         });
       } catch (error) {
         console.error('Error deleting tier:', error);
@@ -142,40 +148,26 @@ const TierSystemPage = () => {
     }
   };
 
-  const getStarsByTierName = (tierName: string): React.ReactNode => {
-    const tierNameLower = tierName.toLowerCase();
-    let stars = 1;
-    
-    if (tierNameLower.includes('silver')) stars = 2;
-    else if (tierNameLower.includes('gold')) stars = 3;
-    else if (tierNameLower.includes('platinum')) stars = 4;
-    else if (tierNameLower.includes('diamond')) stars = 5;
-    
-    return (
-      <div className="flex">
-        {Array(stars).fill(0).map((_, i) => (
-          <Star key={i} className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-        ))}
-      </div>
-    );
-  };
-
-  const columns = [
+  const columns: Column<TierSystem>[] = [
     {
       header: 'ID',
       accessor: 'tier_id',
     },
     {
-      header: 'Name',
+      header: 'Tier Name',
       accessor: 'name',
-    },
-    {
-      header: 'Tier Level',
-      accessor: (tier: TierSystem) => getStarsByTierName(tier.name),
     },
     {
       header: 'Benefits',
       accessor: 'benefits',
+    },
+    {
+      header: 'Total Customers',
+      accessor: (tier: TierSystem) => {
+        // Get count of customers in this tier
+        const count = customerTiers.filter(ct => ct.tier_id === tier.tier_id).length;
+        return count;
+      },
     },
     {
       header: 'Actions',
@@ -214,7 +206,7 @@ const TierSystemPage = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Tier System</h1>
             <p className="text-muted-foreground">
-              Manage customer tiers in the loyalty program
+              Manage loyalty tier system and benefits
             </p>
           </div>
           
@@ -255,7 +247,7 @@ const TierSystemPage = () => {
                       <FormItem>
                         <FormLabel>Benefits</FormLabel>
                         <FormControl>
-                          <Textarea rows={4} {...field} />
+                          <Textarea {...field} rows={3} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

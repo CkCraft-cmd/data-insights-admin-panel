@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -26,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DataTable } from '@/components/DataTable';
+import { DataTable, Column } from '@/components/DataTable';
 import { Plus, Pencil, Trash, Tag } from 'lucide-react';
 import { offerService, businessService } from '@/services/api';
 import { Offer, Business } from '@/types/models';
@@ -154,7 +153,7 @@ const OfferPage = () => {
     }
   };
 
-  const columns = [
+  const columns: Column<Offer>[] = [
     {
       header: 'Offer Name',
       accessor: 'O_name',

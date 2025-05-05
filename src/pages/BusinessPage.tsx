@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -183,11 +182,11 @@ const BusinessPage = () => {
   const columns: Column<Business>[] = [
     {
       header: 'Name',
-      accessor: (business) => business.name,
+      accessor: 'name',
     },
     {
       header: 'Phone',
-      accessor: (business) => business.phone,
+      accessor: 'phone',
     },
     {
       header: 'Industry',

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -19,7 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { DataTable } from '@/components/DataTable';
+import { DataTable, Column } from '@/components/DataTable';
 import { Plus, Pencil, Trash, User } from 'lucide-react';
 import { customerService } from '@/services/api';
 import { Customer } from '@/types/models';
@@ -151,7 +150,7 @@ const CustomerPage = () => {
     }
   };
 
-  const columns = [
+  const columns: Column<Customer>[] = [
     {
       header: 'Name',
       accessor: 'name',

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -19,7 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { DataTable } from '@/components/DataTable';
+import { DataTable, Column } from '@/components/DataTable';
 import { Plus, Pencil, Trash, Package } from 'lucide-react';
 import { productService } from '@/services/api';
 import { Product } from '@/types/models';
@@ -141,7 +140,7 @@ const ProductPage = () => {
     }
   };
 
-  const columns = [
+  const columns: Column<Product>[] = [
     {
       header: 'Name',
       accessor: 'name',

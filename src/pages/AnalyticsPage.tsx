@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -19,33 +18,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { DataTable } from '@/components/DataTable';
-import { Plus, Pencil, Trash, BarChart3, IndianRupee, TrendingUp, TrendingDown } from 'lucide-react';
+import { DataTable, Column } from '@/components/DataTable';
+import { Plus, Pencil, Trash, BarChart } from 'lucide-react';
 import { analyticsService, businessService } from '@/services/api';
 import { Analytics, Business } from '@/types/models';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { 
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
 
+// Define form schema
 const formSchema = z.object({
   B_ID: z.string().min(1, "Business is required"),
   transaction_count: z.string().min(1, "Transaction count is required"),
@@ -136,7 +117,7 @@ const AnalyticsPage = () => {
         await analyticsService.create(analyticData);
         toast({
           title: 'Analytics created',
-          description: 'New analytics entry has been added successfully',
+          description: 'New analytics have been added successfully',
         });
       }
 
@@ -176,62 +157,14 @@ const AnalyticsPage = () => {
     }
   };
 
-  // Format amount in rupees
-  const formatRupees = (amount: number): string => {
-    return new Intl.NumberFormat('en-IN', { 
-      style: 'currency', 
-      currency: 'INR',
-      maximumFractionDigits: 2 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
     }).format(amount);
   };
 
-  // Compare with previous entry to determine trend
-  const getTrend = (analytic: Analytics): React.ReactNode => {
-    const businessAnalytics = analytics
-      .filter(a => a.B_ID === analytic.B_ID)
-      .sort((a, b) => new Date(a.reporting_date).getTime() - new Date(b.reporting_date).getTime());
-    
-    const index = businessAnalytics.findIndex(a => a.analytics_id === analytic.analytics_id);
-    
-    if (index <= 0) return null; // No previous data to compare
-    
-    const current = analytic.total_revenue;
-    const previous = businessAnalytics[index - 1].total_revenue;
-    const percentChange = ((current - previous) / previous) * 100;
-    
-    if (percentChange > 0) {
-      return (
-        <div className="flex items-center text-green-500">
-          <TrendingUp className="h-4 w-4 mr-1" />
-          {percentChange.toFixed(2)}%
-        </div>
-      );
-    } else if (percentChange < 0) {
-      return (
-        <div className="flex items-center text-red-500">
-          <TrendingDown className="h-4 w-4 mr-1" />
-          {Math.abs(percentChange).toFixed(2)}%
-        </div>
-      );
-    } else {
-      return <span>0%</span>;
-    }
-  };
-
-  // Prepare data for charts
-  const chartData = analytics
-    .sort((a, b) => new Date(a.reporting_date).getTime() - new Date(b.reporting_date).getTime())
-    .map(analytic => {
-      const business = businesses.find(b => b.B_ID === analytic.B_ID);
-      return {
-        date: new Date(analytic.reporting_date).toLocaleDateString(),
-        revenue: analytic.total_revenue,
-        transactions: analytic.transaction_count,
-        business: business ? business.name : `Business ${analytic.B_ID}`,
-      };
-    });
-
-  const columns = [
+  const columns: Column<Analytics>[] = [
     {
       header: 'ID',
       accessor: 'analytics_id',
@@ -249,16 +182,9 @@ const AnalyticsPage = () => {
     },
     {
       header: 'Revenue',
-      accessor: (analytic: Analytics) => (
-        <div className="flex items-center">
-          <IndianRupee className="h-4 w-4 mr-1" />
-          {formatRupees(analytic.total_revenue)}
-        </div>
-      ),
-    },
-    {
-      header: 'Trend',
-      accessor: (analytic: Analytics) => getTrend(analytic),
+      accessor: (analytic: Analytics) => {
+        return formatCurrency(analytic.total_revenue);
+      },
     },
     {
       header: 'Date',
@@ -303,7 +229,7 @@ const AnalyticsPage = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
             <p className="text-muted-foreground">
-              Track business performance in the loyalty program (in Indian Rupees)
+              Track and manage business analytics
             </p>
           </div>
           
@@ -329,24 +255,10 @@ const AnalyticsPage = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Business</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a business" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {businesses.map((business) => (
-                              <SelectItem key={business.B_ID} value={business.B_ID.toString()}>
-                                {business.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          {/* Replace with Select component */}
+                          <Input {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -371,12 +283,9 @@ const AnalyticsPage = () => {
                     name="total_revenue"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Total Revenue (₹)</FormLabel>
+                        <FormLabel>Total Revenue</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                            <Input className="pl-10" type="number" step="0.01" {...field} />
-                          </div>
+                          <Input type="number" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -414,51 +323,6 @@ const AnalyticsPage = () => {
             </DialogContent>
           </Dialog>
         </div>
-        
-        {chartData.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div className="p-6 rounded-lg border bg-card shadow">
-              <h2 className="text-lg font-semibold mb-4">Revenue Trend (₹)</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis 
-                    tickFormatter={(value) => `₹${value}`} 
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [formatRupees(value), "Revenue"]}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="#8884d8" 
-                    name="Revenue (₹)" 
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="p-6 rounded-lg border bg-card shadow">
-              <h2 className="text-lg font-semibold mb-4">Transaction Count</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar 
-                    dataKey="transactions" 
-                    fill="#82ca9d" 
-                    name="Transactions" 
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
         
         <DataTable
           columns={columns}

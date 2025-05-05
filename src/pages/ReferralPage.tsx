@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DataTable } from '@/components/DataTable';
+import { DataTable, Column } from '@/components/DataTable';
 import { Plus, Pencil, Trash, UserPlus } from 'lucide-react';
 import { referralProgramService, customerService } from '@/services/api';
 import { ReferralProgram, Customer } from '@/types/models';
@@ -163,9 +163,9 @@ const ReferralPage = () => {
     }
   };
 
-  const columns = [
+  const columns: Column<ReferralProgram>[] = [
     {
-      header: 'Referral ID',
+      header: 'ID',
       accessor: 'Referral_id',
     },
     {
@@ -175,7 +175,7 @@ const ReferralPage = () => {
     {
       header: 'Referred Customer',
       accessor: (referral: ReferralProgram) => {
-        const customer = customers.find(c => c.C_ID === referral.Referred_C_id);
+        const customer = customers.find((c) => c.C_ID === referral.Referred_C_id);
         return customer ? customer.name : '-';
       },
     },

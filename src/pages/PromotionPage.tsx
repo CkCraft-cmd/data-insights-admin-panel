@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -19,7 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { DataTable } from '@/components/DataTable';
+import { DataTable, Column } from '@/components/DataTable';
 import { Plus, Pencil, Trash, Percent } from 'lucide-react';
 import { promotionService } from '@/services/api';
 import { Promotion } from '@/types/models';
@@ -145,7 +144,7 @@ const PromotionPage = () => {
     }
   };
 
-  const columns = [
+  const columns: Column<Promotion>[] = [
     {
       header: 'ID',
       accessor: 'P_ID',
@@ -160,16 +159,6 @@ const PromotionPage = () => {
       header: 'End Date',
       accessor: (promotion: Promotion) => {
         return new Date(promotion.end_date).toLocaleDateString();
-      },
-    },
-    {
-      header: 'Duration (Days)',
-      accessor: (promotion: Promotion) => {
-        const start = new Date(promotion.start_date);
-        const end = new Date(promotion.end_date);
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        return diffDays;
       },
     },
     {

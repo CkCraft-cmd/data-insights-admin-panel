@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -25,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DataTable } from '@/components/DataTable';
+import { DataTable, Column } from '@/components/DataTable';
 import { Plus, Pencil, Trash, AlertTriangle } from 'lucide-react';
 import { fraudDetectionService, customerService } from '@/services/api';
 import { FraudDetection, Customer } from '@/types/models';
@@ -153,7 +152,7 @@ const FraudDetectionPage = () => {
     return fraudCases.filter(fraud => fraud.C_ID === customerId).length;
   };
 
-  const columns = [
+  const columns: Column<FraudDetection>[] = [
     {
       header: 'ID',
       accessor: 'Fraud_id',

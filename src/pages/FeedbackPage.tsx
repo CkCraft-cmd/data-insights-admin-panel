@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -25,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DataTable } from '@/components/DataTable';
+import { DataTable, Column } from '@/components/DataTable';
 import { Plus, Pencil, Trash, MessageSquare } from 'lucide-react';
 import { feedbackService, businessService, customerService } from '@/services/api';
 import { Feedback, Business, Customer } from '@/types/models';
@@ -156,7 +155,7 @@ const FeedbackPage = () => {
     }
   };
 
-  const columns = [
+  const columns: Column<Feedback>[] = [
     {
       header: 'ID',
       accessor: 'Feedback_id',

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -19,7 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { DataTable } from '@/components/DataTable';
+import { DataTable, Column } from '@/components/DataTable';
 import { Plus, Pencil, Trash, Award } from 'lucide-react';
 import { loyaltyService } from '@/services/api';
 import { Loyalty } from '@/types/models';
@@ -146,7 +145,7 @@ const LoyaltyPage = () => {
     }
   };
 
-  const columns = [
+  const columns: Column<Loyalty>[] = [
     {
       header: 'ID',
       accessor: 'L_ID',
