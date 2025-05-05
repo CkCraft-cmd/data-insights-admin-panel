@@ -19,9 +19,10 @@ import {
 } from 'lucide-react';
 import { ReactNode } from 'react';
 
+// Updated Column interface to accept either string or function accessor
 export interface Column<T> {
   header: string;
-  accessor: ((item: T) => ReactNode);
+  accessor: ((item: T) => ReactNode) | keyof T;
 }
 
 interface DataTableProps<T> {
@@ -42,6 +43,16 @@ export function DataTable<T>({
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Helper function to get cell value based on accessor type
+  const getCellValue = (item: T, accessor: ((item: T) => ReactNode) | keyof T): ReactNode => {
+    if (typeof accessor === 'function') {
+      return accessor(item);
+    } else {
+      const value = item[accessor];
+      return value === null || value === undefined ? '' : String(value);
+    }
+  };
 
   // Filter data based on search term
   const filteredData = searchTerm
@@ -116,7 +127,7 @@ export function DataTable<T>({
                 >
                   {columns.map((column, columnIndex) => (
                     <TableCell key={columnIndex}>
-                      {column.accessor(item)}
+                      {getCellValue(item, column.accessor)}
                     </TableCell>
                   ))}
                 </TableRow>
