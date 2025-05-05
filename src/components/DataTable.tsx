@@ -64,7 +64,7 @@ export function DataTable<T>({
   };
 
   // Get display value for a cell
-  const getCellValue = (item: T, column: Column<T>) => {
+  const getCellValue = (item: T, column: Column<T>): React.ReactNode => {
     if (column.cell) {
       return column.cell(item);
     }
@@ -73,7 +73,9 @@ export function DataTable<T>({
       return column.accessor(item);
     }
     
-    return item[column.accessor as keyof T];
+    const value = item[column.accessor as keyof T];
+    // Ensure we return a ReactNode-compatible value
+    return value === null || value === undefined ? '' : String(value);
   };
 
   return (

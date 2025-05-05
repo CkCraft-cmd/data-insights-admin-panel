@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -257,6 +256,7 @@ const BusinessPage = () => {
               
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                  {/* Form fields */}
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -365,7 +365,7 @@ const BusinessPage = () => {
           </Dialog>
         </div>
         
-        <DataTable<Business>
+        <DataTable
           columns={columns}
           data={businesses}
           keyField="B_ID"
