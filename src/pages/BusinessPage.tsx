@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import {
@@ -60,7 +61,7 @@ const BusinessPage = () => {
       phone: '',
       industry: '',
       address: '',
-      offer_id: '',
+      offer_id: 'none',
     },
   });
 
@@ -99,7 +100,7 @@ const BusinessPage = () => {
         phone: currentBusiness.phone,
         industry: currentBusiness.industry || '',
         address: currentBusiness.address || '',
-        offer_id: currentBusiness.offer_id ? String(currentBusiness.offer_id) : '',
+        offer_id: currentBusiness.offer_id ? String(currentBusiness.offer_id) : 'none',
       });
     } else {
       form.reset({
@@ -107,7 +108,7 @@ const BusinessPage = () => {
         phone: '',
         industry: '',
         address: '',
-        offer_id: '',
+        offer_id: 'none',
       });
     }
   }, [currentBusiness, form]);
@@ -120,7 +121,7 @@ const BusinessPage = () => {
         phone: data.phone,
         industry: data.industry || null,
         address: data.address || null,
-        offer_id: data.offer_id ? Number(data.offer_id) : null,
+        offer_id: data.offer_id && data.offer_id !== 'none' ? Number(data.offer_id) : null,
       };
 
       if (currentBusiness) {
@@ -182,11 +183,11 @@ const BusinessPage = () => {
   const columns: Column<Business>[] = [
     {
       header: 'Name',
-      accessor: 'name',
+      accessor: (business) => business.name,
     },
     {
       header: 'Phone',
-      accessor: 'phone',
+      accessor: (business) => business.phone,
     },
     {
       header: 'Industry',
@@ -319,7 +320,7 @@ const BusinessPage = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">No offer</SelectItem>
+                              <SelectItem value="none">No offer</SelectItem>
                               {offers.map((offer) => (
                                 <SelectItem key={offer.offer_id} value={offer.offer_id.toString()}>
                                   {offer.O_name}

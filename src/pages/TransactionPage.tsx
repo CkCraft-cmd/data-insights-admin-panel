@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -180,7 +179,7 @@ const TransactionPage = () => {
   const columns = [
     {
       header: 'ID',
-      accessor: 'T_ID',
+      accessor: (transaction: Transaction) => transaction.T_ID.toString(),
     },
     {
       header: 'Customer',
@@ -278,7 +277,7 @@ const TransactionPage = () => {
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
-                          value={field.value}
+                          value={field.value || "placeholder"}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -286,6 +285,7 @@ const TransactionPage = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="placeholder" disabled>Select a customer</SelectItem>
                             {customers.map((customer) => (
                               <SelectItem key={customer.C_ID} value={customer.C_ID.toString()}>
                                 {customer.name}
@@ -307,7 +307,7 @@ const TransactionPage = () => {
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
-                          value={field.value}
+                          value={field.value || "placeholder"}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -315,6 +315,7 @@ const TransactionPage = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="placeholder" disabled>Select a product</SelectItem>
                             {products.map((product) => (
                               <SelectItem key={product.P_ID} value={product.P_ID.toString()}>
                                 {product.name}

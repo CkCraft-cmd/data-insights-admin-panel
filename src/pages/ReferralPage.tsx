@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -91,7 +90,7 @@ const ReferralPage = () => {
     if (currentReferral) {
       form.reset({
         Referred_id: currentReferral.Referred_id.toString(),
-        Referred_C_id: currentReferral.Referred_C_id ? currentReferral.Referred_C_id.toString() : '',
+        Referred_C_id: currentReferral.Referred_C_id ? currentReferral.Referred_C_id.toString() : 'none',
         Point_awarded: currentReferral.Point_awarded.toString(),
         exp_date: new Date(currentReferral.exp_date).toISOString().split('T')[0],
       });
@@ -109,7 +108,7 @@ const ReferralPage = () => {
     try {
       const referralData = {
         Referred_id: Number(data.Referred_id),
-        Referred_C_id: Number(data.Referred_C_id),
+        Referred_C_id: data.Referred_C_id && data.Referred_C_id !== 'none' ? Number(data.Referred_C_id) : null,
         Point_awarded: Number(data.Point_awarded),
         exp_date: data.exp_date,
       };
@@ -288,6 +287,7 @@ const ReferralPage = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="none">No customer</SelectItem>
                             {customers.map((customer) => (
                               <SelectItem key={customer.C_ID} value={customer.C_ID.toString()}>
                                 {customer.name}

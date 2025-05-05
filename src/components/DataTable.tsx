@@ -17,11 +17,11 @@ import {
   ChevronsLeft, 
   ChevronsRight 
 } from 'lucide-react';
+import { ReactNode } from 'react';
 
 export interface Column<T> {
   header: string;
-  accessor: keyof T | ((item: T) => React.ReactNode);
-  cell?: (item: T) => React.ReactNode;
+  accessor: ((item: T) => ReactNode);
 }
 
 interface DataTableProps<T> {
@@ -61,21 +61,6 @@ export function DataTable<T>({
   // Handle page changes
   const goToPage = (newPage: number) => {
     setPage(Math.max(1, Math.min(newPage, totalPages)));
-  };
-
-  // Get display value for a cell
-  const getCellValue = (item: T, column: Column<T>): React.ReactNode => {
-    if (column.cell) {
-      return column.cell(item);
-    }
-    
-    if (typeof column.accessor === 'function') {
-      return column.accessor(item);
-    }
-    
-    const value = item[column.accessor as keyof T];
-    // Ensure we return a ReactNode-compatible value
-    return value === null || value === undefined ? '' : String(value);
   };
 
   return (
@@ -131,7 +116,7 @@ export function DataTable<T>({
                 >
                   {columns.map((column, columnIndex) => (
                     <TableCell key={columnIndex}>
-                      {getCellValue(item, column)}
+                      {column.accessor(item)}
                     </TableCell>
                   ))}
                 </TableRow>
