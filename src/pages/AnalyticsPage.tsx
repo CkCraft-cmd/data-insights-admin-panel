@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { DataTable, Column } from '@/components/DataTable';
-import { Plus, Pencil, Trash, BarChart } from 'lucide-react';
+import { Plus, Pencil, Trash, BarChart, IndianRupee } from 'lucide-react';
 import { analyticsService, businessService } from '@/services/api';
 import { Analytics, Business } from '@/types/models';
 import { useForm } from 'react-hook-form';
@@ -157,10 +157,12 @@ const AnalyticsPage = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+  // Format currency in Indian Rupees instead of USD
+  const formatRupees = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
@@ -183,7 +185,12 @@ const AnalyticsPage = () => {
     {
       header: 'Revenue',
       accessor: (analytic: Analytics) => {
-        return formatCurrency(analytic.total_revenue);
+        return (
+          <div className="flex items-center">
+            <IndianRupee className="h-4 w-4 mr-1" />
+            {formatRupees(analytic.total_revenue)}
+          </div>
+        );
       },
     },
     {
@@ -229,7 +236,7 @@ const AnalyticsPage = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
             <p className="text-muted-foreground">
-              Track and manage business analytics
+              Track and manage business analytics (in Indian Rupees)
             </p>
           </div>
           
@@ -283,9 +290,12 @@ const AnalyticsPage = () => {
                     name="total_revenue"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Total Revenue</FormLabel>
+                        <FormLabel>Total Revenue (₹)</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <div className="relative">
+                            <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                            <Input className="pl-10" type="number" {...field} />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
