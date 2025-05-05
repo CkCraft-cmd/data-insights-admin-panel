@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   LayoutDashboard, 
@@ -37,6 +37,7 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -74,7 +75,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton asChild>
                       <Button
-                        variant="ghost"
+                        variant={location.pathname === item.path ? "secondary" : "ghost"}
                         className="w-full justify-start text-sidebar-foreground"
                         onClick={() => navigate(item.path)}
                       >
@@ -125,7 +126,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 {menuItems.map((item) => (
                   <Button 
                     key={item.name}
-                    variant="ghost"
+                    variant={location.pathname === item.path ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => {
                       navigate(item.path);

@@ -9,8 +9,10 @@ import {
   Package, 
   Receipt, 
   TrendingUp,
-  Award
+  Award,
+  RefreshCw
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { 
   customerService, 
   businessService, 
@@ -20,6 +22,7 @@ import {
   analyticsService
 } from '@/services/api';
 import { Customer, Business, Product, Transaction, Analytics, TierSystem } from '@/types/models';
+import { useToast } from '@/hooks/use-toast';
 
 interface StatsCardProps {
   title: string;
@@ -56,35 +59,48 @@ const Dashboard = () => {
   const [tiers, setTiers] = useState<TierSystem[]>([]);
   const [analytics, setAnalytics] = useState<Analytics[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [customersData, businessesData, productsData, transactionsData, tiersData, analyticsData] = await Promise.all([
+        customerService.getAll(),
+        businessService.getAll(),
+        productService.getAll(),
+        transactionService.getAll(),
+        tierSystemService.getAll(),
+        analyticsService.getAll(),
+      ]);
+      
+      setCustomers(customersData);
+      setBusinesses(businessesData);
+      setProducts(productsData);
+      setTransactions(transactionsData);
+      setTiers(tiersData);
+      setAnalytics(analyticsData);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error loading dashboard',
+        description: 'Failed to fetch the latest data. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const [customersData, businessesData, productsData, transactionsData, tiersData, analyticsData] = await Promise.all([
-          customerService.getAll(),
-          businessService.getAll(),
-          productService.getAll(),
-          transactionService.getAll(),
-          tierSystemService.getAll(),
-          analyticsService.getAll(),
-        ]);
-        
-        setCustomers(customersData);
-        setBusinesses(businessesData);
-        setProducts(productsData);
-        setTransactions(transactionsData);
-        setTiers(tiersData);
-        setAnalytics(analyticsData);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchData();
   }, []);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchData();
+  };
 
   // Calculate total revenue from transactions
   const totalRevenue = transactions.reduce((sum, transaction) => sum + transaction.Amount, 0);
@@ -100,9 +116,20 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your loyalty management system</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">Overview of your loyalty management system</p>
+          </div>
+          <Button 
+            onClick={handleRefresh} 
+            variant="outline" 
+            size="sm"
+            disabled={isLoading || isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
 
         {isLoading ? (
@@ -157,54 +184,64 @@ const Dashboard = () => {
             {/* Recent customers */}
             <div className="grid gap-4 md:grid-cols-2">
               <Card className="col-span-1">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Recent Customers</CardTitle>
+                  <p className="text-sm text-muted-foreground">{customers.length} total</p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {recentCustomers.map((customer) => (
-                      <div key={customer.C_ID} className="flex items-center">
-                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                          <Users className="h-4 w-4 text-primary" />
+                    {recentCustomers.length > 0 ? (
+                      recentCustomers.map((customer) => (
+                        <div key={customer.C_ID} className="flex items-center">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                            <Users className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{customer.name}</div>
+                            <div className="text-sm text-muted-foreground">{customer.email}</div>
+                          </div>
+                          <div className="ml-auto text-sm text-muted-foreground">
+                            {new Date(customer.join_date).toLocaleDateString()}
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium">{customer.name}</div>
-                          <div className="text-sm text-muted-foreground">{customer.email}</div>
-                        </div>
-                        <div className="ml-auto text-sm text-muted-foreground">
-                          {new Date(customer.join_date).toLocaleDateString()}
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">No customers found</div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               {/* Business performance */}
               <Card className="col-span-1">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Business Performance</CardTitle>
+                  <p className="text-sm text-muted-foreground">{businesses.length} total</p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {businesses.map((business) => {
-                      const businessAnalytics = analytics.find(a => a.B_ID === business.B_ID);
-                      const percentage = businessAnalytics 
-                        ? (businessAnalytics.total_revenue / analyticsTotalRevenue) * 100 
-                        : 0;
-                      
-                      return (
-                        <div key={business.B_ID} className="space-y-1">
-                          <div className="flex justify-between">
-                            <span className="text-sm font-medium">{business.name}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {businessAnalytics ? `$${businessAnalytics.total_revenue.toFixed(2)}` : '$0.00'}
-                            </span>
+                    {businesses.length > 0 ? (
+                      businesses.map((business) => {
+                        const businessAnalytics = analytics.find(a => a.B_ID === business.B_ID);
+                        const percentage = businessAnalytics && analyticsTotalRevenue > 0
+                          ? (businessAnalytics.total_revenue / analyticsTotalRevenue) * 100 
+                          : 0;
+                        
+                        return (
+                          <div key={business.B_ID} className="space-y-1">
+                            <div className="flex justify-between">
+                              <span className="text-sm font-medium">{business.name}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {businessAnalytics ? `$${businessAnalytics.total_revenue.toFixed(2)}` : '$0.00'}
+                              </span>
+                            </div>
+                            <Progress value={percentage} className="h-2" />
                           </div>
-                          <Progress value={percentage} className="h-2" />
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">No businesses found</div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
