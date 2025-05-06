@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -171,45 +170,33 @@ const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ analytics, businesses
           <CardTitle className="text-lg font-medium">Revenue Over Time</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="h-[300px]">
-            <ChartContainer
-              config={{
-                revenue: {
-                  label: "Revenue",
-                  theme: {
-                    light: "#8B5CF6",
-                    dark: "#9b87f5"
-                  }
-                }
-              }}
-            >
-              <LineChart data={timeSeriesData}>
-                <XAxis dataKey="date" />
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={timeSeriesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <XAxis 
+                  dataKey="date" 
+                  padding={{ left: 10, right: 10 }}
+                />
                 <YAxis
                   tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
+                  width={80}
+                  domain={['auto', 'auto']}
                 />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value, name) => {
-                        if (name === "revenue") {
-                          return formatRupees(value as number);
-                        }
-                        return value;
-                      }}
-                    />
-                  }
+                <Tooltip 
+                  formatter={(value: any) => formatRupees(value)}
+                  labelFormatter={(label) => `Date: ${label}`}
                 />
                 <Legend />
                 <Line
                   type="monotone"
                   dataKey="revenue"
                   name="Revenue"
-                  stroke="var(--color-revenue)"
+                  stroke="#8B5CF6"
                   activeDot={{ r: 8 }}
+                  strokeWidth={2}
                 />
               </LineChart>
-            </ChartContainer>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
