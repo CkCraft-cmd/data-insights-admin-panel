@@ -25,6 +25,7 @@ import { Analytics, Business } from '@/types/models';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import AnalyticsCharts from '@/components/AnalyticsCharts';
 
 // Define form schema
 const formSchema = z.object({
@@ -333,6 +334,11 @@ const AnalyticsPage = () => {
             </DialogContent>
           </Dialog>
         </div>
+        
+        {/* Add the Analytics Charts section */}
+        {!isLoading && analytics.length > 0 && (
+          <AnalyticsCharts analytics={analytics} businesses={businesses} />
+        )}
         
         <DataTable
           columns={columns}
