@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { DataTable, Column } from '@/components/DataTable';
-import { Plus, Pencil, Trash, BarChart, IndianRupee } from 'lucide-react';
+import { Plus, Pencil, Trash, BarChart, IndianRupee, RefreshCw } from 'lucide-react';
 import { analyticsService, businessService } from '@/services/api';
 import { Analytics, Business } from '@/types/models';
 import { useForm } from 'react-hook-form';
@@ -41,8 +41,10 @@ const AnalyticsPage = () => {
   const [analytics, setAnalytics] = useState<Analytics[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentAnalytic, setCurrentAnalytic] = useState<Analytics | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -55,31 +57,55 @@ const AnalyticsPage = () => {
     },
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = async (showLoadingState = true) => {
+    if (showLoadingState) {
       setIsLoading(true);
-      try {
-        const [analyticsData, businessesData] = await Promise.all([
-          analyticsService.getAll(),
-          businessService.getAll(),
-        ]);
-        
-        setAnalytics(analyticsData);
-        setBusinesses(businessesData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to load data',
-          description: 'Please try again later',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    } else {
+      setIsRefreshing(true);
+    }
     
+    try {
+      const [analyticsData, businessesData] = await Promise.all([
+        analyticsService.getAll(),
+        businessService.getAll(),
+      ]);
+      
+      setAnalytics(analyticsData);
+      setBusinesses(businessesData);
+      setLastUpdated(new Date());
+      
+      if (!showLoadingState) {
+        toast({
+          title: 'Data refreshed',
+          description: 'Analytics data has been updated',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to load data',
+        description: 'Please try again later',
+      });
+    } finally {
+      if (showLoadingState) {
+        setIsLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
+    }
+  };
+
+  // Set up auto-refresh interval (every 30 seconds)
+  useEffect(() => {
     fetchData();
-  }, [toast]);
+    
+    const intervalId = setInterval(() => {
+      fetchData(false);
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     if (currentAnalytic) {
@@ -122,8 +148,8 @@ const AnalyticsPage = () => {
         });
       }
 
-      const updatedAnalytics = await analyticsService.getAll();
-      setAnalytics(updatedAnalytics);
+      // Refresh data after changes
+      fetchData(false);
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error saving analytics:', error);
@@ -139,14 +165,13 @@ const AnalyticsPage = () => {
     if (window.confirm(`Are you sure you want to delete analytics #${analytic.analytics_id}?`)) {
       try {
         await analyticsService.delete(analytic.analytics_id);
-        
-        const updatedAnalytics = await analyticsService.getAll();
-        setAnalytics(updatedAnalytics);
-        
         toast({
           title: 'Analytics deleted',
           description: `Analytics #${analytic.analytics_id} has been removed`,
         });
+        
+        // Refresh data after deletion
+        fetchData(false);
       } catch (error) {
         console.error('Error deleting analytics:', error);
         toast({
@@ -156,6 +181,10 @@ const AnalyticsPage = () => {
         });
       }
     }
+  };
+
+  const handleRefresh = () => {
+    fetchData(false);
   };
 
   // Format currency in Indian Rupees instead of USD
@@ -241,103 +270,119 @@ const AnalyticsPage = () => {
             </p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setCurrentAnalytic(null)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Analytics
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>
-                  {currentAnalytic ? 'Edit Analytics' : 'Add Analytics'}
-                </DialogTitle>
-              </DialogHeader>
-              
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-                  <FormField
-                    control={form.control}
-                    name="B_ID"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Business</FormLabel>
-                        <FormControl>
-                          {/* Replace with Select component */}
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="transaction_count"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Transaction Count</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="total_revenue"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Total Revenue (₹)</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                            <Input className="pl-10" type="number" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="reporting_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Reporting Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit">
-                      {currentAnalytic ? 'Update' : 'Create'} Analytics
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={handleRefresh} 
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setCurrentAnalytic(null)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Analytics
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {currentAnalytic ? 'Edit Analytics' : 'Add Analytics'}
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="B_ID"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Business</FormLabel>
+                          <FormControl>
+                            {/* Replace with Select component */}
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="transaction_count"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Transaction Count</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="total_revenue"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Total Revenue (₹)</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                              <Input className="pl-10" type="number" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="reporting_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Reporting Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit">
+                        {currentAnalytic ? 'Update' : 'Create'} Analytics
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
         
         {/* Add the Analytics Charts section */}
         {!isLoading && analytics.length > 0 && (
-          <AnalyticsCharts analytics={analytics} businesses={businesses} />
+          <>
+            <AnalyticsCharts analytics={analytics} businesses={businesses} />
+            <div className="text-xs text-gray-500 text-right">
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </div>
+          </>
         )}
         
         <DataTable
