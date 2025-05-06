@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -10,7 +9,8 @@ import {
   Receipt, 
   TrendingUp,
   Award,
-  RefreshCw
+  RefreshCw,
+  IndianRupee
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -102,6 +102,15 @@ const Dashboard = () => {
     fetchData();
   };
 
+  // Format currency in Indian Rupees
+  const formatRupees = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
   // Calculate total revenue from transactions
   const totalRevenue = transactions.reduce((sum, transaction) => sum + transaction.Amount, 0);
   
@@ -168,7 +177,12 @@ const Dashboard = () => {
               />
               <StatsCard
                 title="Total Revenue"
-                value={`$${totalRevenue.toFixed(2)}`}
+                value={
+                  <div className="flex items-center">
+                    <IndianRupee className="h-4 w-4 mr-1" />
+                    {formatRupees(totalRevenue).replace('₹', '')}
+                  </div>
+                }
                 icon={<TrendingUp className="h-4 w-4" />}
                 description="Revenue from all transactions"
                 trend="+8% from last month"
@@ -231,8 +245,9 @@ const Dashboard = () => {
                           <div key={business.B_ID} className="space-y-1">
                             <div className="flex justify-between">
                               <span className="text-sm font-medium">{business.name}</span>
-                              <span className="text-sm text-muted-foreground">
-                                {businessAnalytics ? `$${businessAnalytics.total_revenue.toFixed(2)}` : '$0.00'}
+                              <span className="text-sm text-muted-foreground flex items-center">
+                                <IndianRupee className="h-3 w-3 mr-1" />
+                                {businessAnalytics ? formatRupees(businessAnalytics.total_revenue).replace('₹', '') : '0.00'}
                               </span>
                             </div>
                             <Progress value={percentage} className="h-2" />
